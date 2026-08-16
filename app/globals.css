@@ -1,0 +1,488 @@
+:root {
+  --background: #0d1109;
+  --foreground: #fef08a;
+  --panel-bg: #1c2415;
+  --panel-border: #4d5b3e;
+  --parchment-bg: #c2a667;
+  --parchment-dark: #8c733e;
+  --parchment-text: #2d210f;
+  --gold: #eab308;
+  --gold-glow: #fef08a;
+  --fire: #ef4444;
+  --fire-glow: #fca5a5;
+  --water: #38bdf8;
+  --water-glow: #bae6fd;
+  --toxic: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--background);
+  color: #fef3c7;
+  font-family: Georgia, "Times New Roman", Times, serif, system-ui;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+body {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  border: none;
+  background: none;
+}
+
+/* Base Page Layout */
+.menu-page,
+.game-page,
+.levels-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at center, #27311c 0%, #0d1109 100%);
+  position: relative;
+}
+
+/* Forest Temple Main Menu Card */
+.menu-card {
+  width: min(840px, 95vw);
+  padding: 48px 36px;
+  background: linear-gradient(180deg, #2a3420 0%, #171d12 100%);
+  border: 4px solid #5b6e47;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(0, 0, 0, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Vine overlay in corners */
+.menu-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: repeating-linear-gradient(
+    90deg,
+    #4d7c0f 0px,
+    #65a30d 20px,
+    #3f6212 40px
+  );
+  border-bottom: 2px solid #223708;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* Title matching Logo in Reference Images */
+.game-title {
+  margin: 16px 0 24px 0;
+  line-height: 1.1;
+}
+
+.title-line1 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.title-fire {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 2px 2px 0 #000;
+}
+
+.title-amp {
+  color: #fef08a;
+  margin: 0 12px;
+  font-weight: 400;
+}
+
+.title-water {
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 2px 2px 0 #000;
+}
+
+.title-line2 {
+  font-size: clamp(24px, 4vw, 42px);
+  color: #84cc16;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px rgba(132, 204, 22, 0.5), 2px 2px 0 #000;
+  margin-top: 6px;
+}
+
+.subtitle {
+  opacity: 0.85;
+  font-size: 17px;
+  max-width: 540px;
+  margin: 0 auto 36px auto;
+  line-height: 1.5;
+  color: #fef3c7;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* Parchment / Gold Styled Buttons */
+.parchment-button,
+.primary-button,
+.secondary-button,
+.hud-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 3px solid #8c733e;
+  background: linear-gradient(180deg, #d9b873 0%, #b38f45 100%);
+  color: #2d210f;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #6e582d, 0 8px 15px rgba(0, 0, 0, 0.6);
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+}
+
+.parchment-button:hover,
+.primary-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #e6c885 0%, #c49f52 100%);
+  box-shadow: 0 8px 0 #6e582d, 0 12px 20px rgba(0, 0, 0, 0.7);
+}
+
+.parchment-button:active,
+.primary-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #6e582d, 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.secondary-button {
+  background: linear-gradient(180deg, #3d4a30 0%, #28331e 100%);
+  color: #fef3c7;
+  border-color: #5b6e47;
+  box-shadow: 0 6px 0 #1b2413;
+}
+
+.secondary-button:hover {
+  background: linear-gradient(180deg, #4c5c3c 0%, #324026 100%);
+  box-shadow: 0 8px 0 #1b2413;
+}
+
+.menu-characters {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 36px;
+  padding: 0 20px;
+}
+
+.char-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.char-icon {
+  font-size: 44px;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+  animation: float 2.5s ease-in-out infinite alternate;
+}
+
+.char-preview.water .char-icon {
+  animation-delay: 1.2s;
+}
+
+/* Parchment Instructions Overlay (Matching Image 2!) */
+.parchment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 100;
+  animation: fadeIn 0.25s ease;
+}
+
+.parchment-card {
+  width: min(620px, 95vw);
+  background: linear-gradient(180deg, #d9b873 0%, #b8954d 100%);
+  border: 8px solid #544120;
+  border-radius: 16px;
+  padding: 36px 28px;
+  color: #2d210f;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  position: relative;
+  text-align: center;
+}
+
+.parchment-card::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 2px solid #8c733e;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.parchment-card h2 {
+  font-size: 28px;
+  margin: 0 0 20px 0;
+  color: #3b280a;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.parchment-rules {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.parchment-rules li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.parchment-rules .bullet {
+  color: #78350f;
+  font-size: 20px;
+}
+
+.text-fire {
+  color: #dc2626;
+  font-weight: 900;
+}
+
+.text-water {
+  color: #0284c7;
+  font-weight: 900;
+}
+
+.text-green {
+  color: #15803d;
+  font-weight: 900;
+}
+
+/* In-Game HUD Bar (Matching Image 3!) */
+.game-shell {
+  display: flex;
+  flex-direction: column;
+  width: min(1280px, 98vw);
+  gap: 12px;
+}
+
+.game-hud-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  background: linear-gradient(180deg, #2a3420 0%, #171d12 100%);
+  border: 3px solid #5b6e47;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* Oval Leaf Timer Frame */
+.hud-timer-oval {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c2415;
+  border: 3px solid #65a30d;
+  border-radius: 30px;
+  padding: 6px 24px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fef08a;
+  box-shadow: 0 0 10px rgba(101, 163, 13, 0.4);
+  letter-spacing: 2px;
+}
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.gem-counter {
+  font-weight: 800;
+  font-size: 16px;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gem-counter.fire {
+  color: #fca5a5;
+}
+
+.gem-counter.water {
+  color: #bae6fd;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.hud-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.canvas-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 4px solid #5b6e47;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #0d1109;
+}
+
+/* Footer Controls Bar */
+.game-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.control-tag {
+  padding: 10px 18px;
+  background: #1c2415;
+  border: 2px solid #4d5b3e;
+  border-radius: 12px;
+  color: #fef3c7;
+}
+
+.fire-tag strong {
+  color: #ef4444;
+}
+
+.water-tag strong {
+  color: #38bdf8;
+}
+
+/* Level Selection Map Node Tree (Matching Image 4!) */
+.map-container {
+  width: min(1000px, 95vw);
+  background: linear-gradient(180deg, #c2a667 0%, #9e8142 100%);
+  border: 8px solid #544120;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  position: relative;
+  color: #2d210f;
+}
+
+.map-node-tree {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  min-height: 420px;
+  position: relative;
+}
+
+.node-btn {
+  width: 64px;
+  height: 64px;
+  background: #3b280a;
+  border: 4px solid #eab308;
+  transform: rotate(45deg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+}
+
+.node-btn:hover {
+  transform: rotate(45deg) scale(1.15);
+  background: #eab308;
+  border-color: #fff;
+}
+
+.node-text {
+  transform: rotate(-45deg);
+  font-weight: 900;
+  font-size: 20px;
+  color: #fff;
+}
+
+.node-btn:hover .node-text {
+  color: #000;
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
