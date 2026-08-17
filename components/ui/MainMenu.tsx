@@ -10,24 +10,24 @@ export default function MainMenu() {
   return (
     <main className="menu-page">
       <section className="menu-card">
-        <span className="eyebrow">COOPERATIVE PUZZLE PLATFORMER</span>
+        <span className="eyebrow">2D BINARY LOGIC PUZZLE PLATFORMER</span>
 
         <h1 className="game-title">
           <div className="title-line1">
-            <span className="title-fire">FIREBOY</span>
+            <span className="title-fire">BINARY</span>
             <span className="title-amp">&amp;</span>
-            <span className="title-water">WATERGIRL</span>
+            <span className="title-water">BRIDGE</span>
           </div>
-          <div className="title-line2">IN THE FOREST TEMPLE</div>
+          <div className="title-line2">LEVEL 1 — THE LOGIC TEMPLE</div>
         </h1>
 
         <p className="subtitle">
-          Guide both elemental heroes through the ancient temple. Solve puzzles, collect diamonds, and reach the exit doors!
+          Real binary logic gates (AND, OR, NOT, XOR, Combination) physically control the temple. Work together to trigger the mechanisms and escape!
         </p>
 
         <div className="menu-actions">
           <Link className="parchment-button" href="/game?level=1">
-            PLAY ▶
+            PLAY LEVEL 1 ▶
           </Link>
           <button
             className="secondary-button"
@@ -35,19 +35,16 @@ export default function MainMenu() {
           >
             INSTRUCTIONS
           </button>
-          <Link className="secondary-button" href="/levels">
-            LEVEL SELECT
-          </Link>
         </div>
 
         <div className="menu-characters">
-          <div className="char-preview water">
-            <span className="char-icon">💧</span>
-            <strong>Watergirl</strong>
-          </div>
           <div className="char-preview fire">
-            <span className="char-icon">🔥</span>
-            <strong>Fireboy</strong>
+            <span className="char-icon">🔴</span>
+            <strong>RED (WASD)</strong>
+          </div>
+          <div className="char-preview water">
+            <span className="char-icon">🔵</span>
+            <strong>BLUE (Arrows)</strong>
           </div>
         </div>
       </section>

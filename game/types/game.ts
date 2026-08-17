@@ -92,6 +92,34 @@ export type Particle = {
 
 export type CharacterType = "fire" | "water";
 
+// BINARY BRIDGE LOGIC GATES & ANCIENT INPUT PANELS SYSTEM TYPES
+export type LogicGateType = "AND" | "OR" | "NOT" | "XOR" | "COMBINATION";
+
+export type LogicGate = {
+  id: string;
+  type: LogicGateType;
+  label: string;
+  x: number;
+  y: number;
+  inputIds: string[]; // Switch / Plate / Panel / Gate IDs
+  targetId: string;   // Mechanism ID (Platform, Elevator, Door, or Escape Trigger)
+  output: boolean;
+};
+
+export type SignalWire = {
+  id: string;
+  fromId: string;
+  toId: string;
+  points: Vec2[];
+  active: boolean;
+};
+
+export type InputPanel = Rect & {
+  id: string;
+  keyName: "A" | "B" | "C";
+  value: 0 | 1;
+};
+
 export type Level = {
   id: number;
   name: string;
@@ -113,6 +141,9 @@ export type Level = {
     fire: ExitDoor;
     water: ExitDoor;
   };
+  logicGates?: LogicGate[];
+  signalWires?: SignalWire[];
+  inputPanels?: InputPanel[];
 };
 
 export type GameStatus = "playing" | "paused" | "victory" | "defeated";
@@ -125,4 +156,7 @@ export type GameStats = {
   elapsedSeconds: number;
   status: GameStatus;
   defeatReason?: string;
+  isEscaping?: boolean;
+  escapeTimer?: number;
+  logicScore?: number;
 };

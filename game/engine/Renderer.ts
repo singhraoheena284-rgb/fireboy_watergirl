@@ -18,205 +18,309 @@ export class Renderer {
     particles: Particle[],
     stats: GameStats
   ) {
-    this.time += 0.016; // Increment animation time (~60 FPS)
+    this.time += 0.016; // Increment animation time
     const { ctx, canvas } = this;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Forest Temple Background Wall & Visual Atmosphere
+    // 1. Sandstone Wall Background (Reference Image Match!)
     this.drawBackground(level);
 
-    // 2. Background In-Game Tutorial Text Hints (Level 1)
-    if (level.id === 1) {
-      this.drawLevel1TutorialText(ctx, level);
+    // 2. Signal Lines (Red when 0, Green when 1)
+    if (level.signalWires) {
+      this.drawSignalWires(level.signalWires);
     }
 
-    // 3. Hazards (Lava, Toxic Acid, Water)
-    this.drawHazards(level.hazards);
+    // 3. Top Center OUTPUT Capsule Device
+    this.drawTopOutputCapsule(level, stats);
 
-    // 4. Platforms & Slopes
+    // 4. Sandstone Platforms & Ledges
     this.drawPlatforms(level);
 
-    // 5. Switches & Levers
-    this.drawSwitches(level.switches);
+    // 5. Hazards
+    this.drawHazards(level.hazards);
 
-    // 6. Pressure Plates & Sliding Gates
+    // 6. In-Game Switches & Pressure Plates
+    this.drawSwitches(level.switches);
     this.drawPressurePlates(level.pressurePlates);
+
+    // 7. Sliding Stone Doors
     this.drawDoors(doors);
 
-    // 7. Pushable Metallic Blocks
-    this.drawPushableBlocks(level.pushableBlocks);
+    // 8. Four Large Circular Logic Gate Devices (AND ∧, OR ∨, XOR ⊕, NOT ¬)
+    if (level.logicGates) {
+      this.drawLogicGates(level.logicGates);
+    }
 
-    // 8. Collectible Gems & Exit Doors
+    // 9. Clickable Ancient Sandstone Input Panels [ 0 ] [ 1 ]
+    if (level.inputPanels) {
+      this.drawInputPanels(level.inputPanels);
+    }
+
+    // 10. Collectible Diamonds & Upper Character Exit Doors (♂ & ♀)
     this.drawExits(level.exits);
     this.drawGems(level.gems);
 
-    // 9. Particle Effects
+    // 11. Particles
     this.drawParticles(particles);
 
-    // 10. Characters (Fireboy & Watergirl)
+    // 12. Red & Blue Characters
     this.drawCharacter(fireChar);
     this.drawCharacter(waterChar);
+
+    // 13. Final Route Unlocked Highlight Banner
+    if (stats.isEscaping) {
+      this.drawRouteUnlockedBanner(ctx, canvas);
+    }
   }
 
   private drawBackground(level: Level) {
     const { ctx } = this;
 
-    // Base dark green/brown temple brick background
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, level.height);
-    bgGrad.addColorStop(0, "#1c2214");
-    bgGrad.addColorStop(0.5, "#252b1b");
-    bgGrad.addColorStop(1, "#151910");
-    ctx.fillStyle = bgGrad;
+    // Warm golden sandstone wall background
+    ctx.fillStyle = "#d4a359";
     ctx.fillRect(0, 0, level.width, level.height);
 
-    // Stone brick grid pattern
+    // Sandstone brick grid texture with dark mortar lines
     ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
     ctx.lineWidth = 2;
-    const brickW = 64;
-    const brickH = 32;
+    const brickW = 80;
+    const brickH = 40;
 
     for (let y = 0; y < level.height; y += brickH) {
       const offsetX = (y / brickH) % 2 === 0 ? 0 : brickW / 2;
       for (let x = -brickW; x < level.width + brickW; x += brickW) {
-        ctx.fillStyle = (x + y) % 128 === 0 ? "#232b1a" : "#1e2617";
+        ctx.fillStyle = (x + y) % 160 === 0 ? "#caa050" : "#d8aa5d";
         ctx.fillRect(x + offsetX, y, brickW - 2, brickH - 2);
         ctx.strokeRect(x + offsetX, y, brickW - 2, brickH - 2);
       }
     }
-
-    // Atmospheric Light Rays streaming down from ceiling arches
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    const rayPositions = [200, 640, 1000];
-    rayPositions.forEach((rx) => {
-      const rayGrad = ctx.createLinearGradient(rx, 0, rx + 80, level.height);
-      rayGrad.addColorStop(0, "rgba(255, 245, 200, 0.08)");
-      rayGrad.addColorStop(0.6, "rgba(255, 245, 200, 0.03)");
-      rayGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-
-      ctx.fillStyle = rayGrad;
-      ctx.beginPath();
-      ctx.moveTo(rx - 40, 0);
-      ctx.lineTo(rx + 80, 0);
-      ctx.lineTo(rx + 220, level.height);
-      ctx.lineTo(rx - 80, level.height);
-      ctx.closePath();
-      ctx.fill();
-    });
-    ctx.restore();
-
-    // Hanging vines decoration from top ceiling
-    ctx.strokeStyle = "#4d7c0f";
-    ctx.lineWidth = 3;
-    const vinePositions = [120, 360, 580, 840, 1100];
-    vinePositions.forEach((vx, idx) => {
-      ctx.beginPath();
-      ctx.moveTo(vx, 0);
-      const vineLen = 60 + (idx % 3) * 30;
-      ctx.quadraticCurveTo(
-        vx + Math.sin(this.time * 2 + idx) * 10,
-        vineLen / 2,
-        vx,
-        vineLen
-      );
-      ctx.stroke();
-
-      // Leaves
-      ctx.fillStyle = "#65a30d";
-      ctx.beginPath();
-      ctx.arc(vx + 4, vineLen / 2, 4, 0, Math.PI * 2);
-      ctx.arc(vx - 4, vineLen * 0.8, 5, 0, Math.PI * 2);
-      ctx.fill();
-    });
   }
 
-  private drawLevel1TutorialText(ctx: CanvasRenderingContext2D, level: Level) {
+  private drawTopOutputCapsule(level: Level, stats: GameStats) {
+    const { ctx } = this;
+    const combGate = level.logicGates?.find((g) => g.type === "COMBINATION");
+    const isOutputActive = combGate ? combGate.output : stats.isEscaping || false;
+
+    const cx = 640;
+    const cy = 40;
+    const w = 90;
+    const h = 75;
+
     ctx.save();
-    ctx.font = "bold 15px sans-serif";
 
-    // "USE A,W,D TO MOVE WATERGIRL..."
-    ctx.fillStyle = "#38bdf8";
-    ctx.shadowColor = "#000";
-    ctx.shadowBlur = 4;
-    ctx.fillText("USE A,W,D TO MOVE WATERGIRL...", 140, 530);
+    // Recessed Sandstone Niche Frame
+    ctx.fillStyle = "#1e140a";
+    ctx.fillRect(cx - w / 2 - 8, cy - 6, w + 16, h + 12);
+    ctx.strokeStyle = "#1a1008";
+    ctx.lineWidth = 3.5;
+    ctx.strokeRect(cx - w / 2 - 8, cy - 6, w + 16, h + 12);
 
-    // "...USE ← ↑ → TO MOVE FIREBOY"
-    ctx.fillStyle = "#ef4444";
-    ctx.fillText("...USE ← ↑ → TO MOVE FIREBOY", 140, 600);
+    // Gold Metallic Top & Bottom Caps
+    ctx.fillStyle = "#ca8a04";
+    ctx.fillRect(cx - w / 2, cy, w, 12);
+    ctx.fillRect(cx - w / 2, cy + h - 12, w, 12);
 
-    // "...NEVER MIX FIRE & WATER !"
-    ctx.fillStyle = "#eab308";
-    ctx.font = "bold 18px sans-serif";
-    ctx.fillText("...NEVER MIX FIRE & WATER !", 520, 620);
+    ctx.strokeStyle = "#fde047";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx - w / 2, cy, w, 12);
+    ctx.strokeRect(cx - w / 2, cy + h - 12, w, 12);
+
+    // Vertical Glass Tube
+    const tubeGrad = ctx.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
+    tubeGrad.addColorStop(0, "#0f172a");
+    tubeGrad.addColorStop(0.5, "#1e293b");
+    tubeGrad.addColorStop(1, "#0f172a");
+    ctx.fillStyle = tubeGrad;
+    ctx.fillRect(cx - w / 2 + 6, cy + 12, w - 12, h - 24);
+
+    // Glowing Vertical Energy Beam Inside Capsule
+    if (isOutputActive) {
+      const beamGrad = ctx.createRadialGradient(cx, cy + h / 2, 4, cx, cy + h / 2, w / 2);
+      beamGrad.addColorStop(0, "#86efac");
+      beamGrad.addColorStop(0.5, "#22c55e");
+      beamGrad.addColorStop(1, "rgba(34, 197, 94, 0)");
+      ctx.fillStyle = beamGrad;
+      ctx.fillRect(cx - w / 2 + 10, cy + 12, w - 20, h - 24);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(cx - 8, cy + 12, 16, h - 24);
+    } else {
+      ctx.fillStyle = "rgba(20, 83, 45, 0.4)";
+      ctx.fillRect(cx - 12, cy + 12, 24, h - 24);
+    }
+
+    // OUTPUT Label Text Below Capsule
+    ctx.fillStyle = isOutputActive ? "#4ade80" : "#fef08a";
+    ctx.font = "bold 16px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText("OUTPUT", cx, cy + h + 8);
 
     ctx.restore();
   }
 
-  private drawHazards(hazards: Level["hazards"]) {
+  private drawSignalWires(wires: Level["signalWires"]) {
+    if (!wires) return;
     const { ctx } = this;
 
-    for (const h of hazards) {
+    for (const wire of wires) {
+      if (wire.points.length < 2) continue;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(wire.points[0].x, wire.points[0].y);
+      for (let i = 1; i < wire.points.length; i++) {
+        ctx.lineTo(wire.points[i].x, wire.points[i].y);
+      }
+
+      if (wire.active) {
+        // Glowing Green Signal (1)
+        ctx.strokeStyle = "#22c55e";
+        ctx.lineWidth = 5;
+        ctx.shadowColor = "#86efac";
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        // Red Signal (0)
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  private drawLogicGates(gates: Level["logicGates"]) {
+    if (!gates) return;
+    const { ctx } = this;
+
+    for (const gate of gates) {
+      if (gate.type === "COMBINATION") continue; // Rendered as top OUTPUT capsule
+
+      ctx.save();
+      const radius = 36; // Large Circular Gate Device
+
+      // Outer Gold/Bronze Mechanical Gear Ring
+      ctx.fillStyle = "#1e1b18";
+      ctx.beginPath();
+      ctx.arc(gate.x, gate.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Distinct Gate Color Accent Ring (AND=purple, OR=blue, XOR=green, NOT=red)
+      let accentColor = "#ca8a04";
+      let gateSymbol = "∧";
+
+      switch (gate.type) {
+        case "AND":
+          accentColor = "#a855f7"; // Purple accent
+          gateSymbol = "∧";
+          break;
+        case "OR":
+          accentColor = "#38bdf8"; // Blue accent
+          gateSymbol = "∨";
+          break;
+        case "XOR":
+          accentColor = "#22c55e"; // Green accent
+          gateSymbol = "⊕";
+          break;
+        case "NOT":
+          accentColor = "#ef4444"; // Red accent
+          gateSymbol = "¬";
+          break;
+      }
+
+      // Segmented Color Rim
+      ctx.strokeStyle = gate.output ? "#22c55e" : accentColor;
+      ctx.lineWidth = 6;
+      ctx.shadowColor = gate.output ? "#86efac" : accentColor;
+      ctx.shadowBlur = gate.output ? 14 : 4;
+      ctx.stroke();
+
+      // Thick Black Outline around circle
+      ctx.strokeStyle = "#1a1008";
+      ctx.lineWidth = 3.5;
+      ctx.shadowBlur = 0;
+      ctx.strokeRect(gate.x - radius - 2, gate.y - radius - 2, radius * 2 + 4, radius * 2 + 4);
+
+      // Dark Metallic Inner Circle
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(gate.x, gate.y, radius - 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Logic Symbol in Center (∧, ∨, ⊕, ¬)
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 26px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(gateSymbol, gate.x, gate.y);
+
+      // Label Text Above Gate
+      ctx.fillStyle = "#fef08a";
+      ctx.font = "bold 15px sans-serif";
+      ctx.fillText(gate.label, gate.x, gate.y - radius - 10);
+
+      ctx.restore();
+    }
+  }
+
+  private drawInputPanels(panels: Level["inputPanels"]) {
+    if (!panels) return;
+    const { ctx } = this;
+
+    for (const panel of panels) {
       ctx.save();
 
-      if (h.type === "fire") {
-        // Red Lava Pool
-        const grad = ctx.createLinearGradient(h.x, h.y, h.x, h.y + h.height);
-        grad.addColorStop(0, "#ef4444");
-        grad.addColorStop(0.4, "#dc2626");
-        grad.addColorStop(1, "#7f1d1d");
-        ctx.fillStyle = grad;
-        ctx.fillRect(h.x, h.y, h.width, h.height);
+      // Sandstone Control Plaque Base
+      ctx.fillStyle = "#b8863b";
+      ctx.fillRect(panel.x, panel.y, panel.width, panel.height);
 
-        // Animated Lava Wave Crests
-        ctx.fillStyle = "#facc15";
-        ctx.beginPath();
-        ctx.moveTo(h.x, h.y);
-        for (let x = 0; x <= h.width; x += 10) {
-          const waveY = h.y + Math.sin(this.time * 7 + (h.x + x) * 0.08) * 4;
-          ctx.lineTo(h.x + x, waveY);
-        }
-        ctx.lineTo(h.x + h.width, h.y + 8);
-        ctx.lineTo(h.x, h.y + 8);
-        ctx.fill();
-      } else if (h.type === "water") {
-        // Blue Water Pool
-        const grad = ctx.createLinearGradient(h.x, h.y, h.x, h.y + h.height);
-        grad.addColorStop(0, "rgba(56, 189, 248, 0.85)");
-        grad.addColorStop(1, "rgba(3, 105, 161, 0.95)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(h.x, h.y, h.width, h.height);
+      ctx.strokeStyle = "#1a1008";
+      ctx.lineWidth = 3.5;
+      ctx.strokeRect(panel.x, panel.y, panel.width, panel.height);
 
-        // Animated Water Ripples
-        ctx.strokeStyle = "#e0f2fe";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(h.x, h.y + 3);
-        for (let x = 0; x <= h.width; x += 12) {
-          const waveY = h.y + 3 + Math.sin(this.time * 5 + (h.x + x) * 0.06) * 3;
-          ctx.lineTo(h.x + x, waveY);
-        }
-        ctx.stroke();
-      } else if (h.type === "toxic") {
-        // Toxic Green Sludge Pool
-        const grad = ctx.createLinearGradient(h.x, h.y, h.x, h.y + h.height);
-        grad.addColorStop(0, "#22c55e");
-        grad.addColorStop(1, "#14532d");
-        ctx.fillStyle = grad;
-        ctx.fillRect(h.x, h.y, h.width, h.height);
+      // Label (INPUT A / INPUT B)
+      ctx.fillStyle = "#fef08a";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`INPUT ${panel.keyName}`, panel.x + 8, panel.y + panel.height / 2);
 
-        // Bubbling crests
-        ctx.fillStyle = "#86efac";
-        ctx.beginPath();
-        ctx.moveTo(h.x, h.y);
-        for (let x = 0; x <= h.width; x += 14) {
-          const waveY = h.y + Math.sin(this.time * 4 + (h.x + x) * 0.05) * 3;
-          ctx.lineTo(h.x + x, waveY);
-        }
-        ctx.lineTo(h.x + h.width, h.y + 6);
-        ctx.lineTo(h.x, h.y + 6);
-        ctx.fill();
-      }
+      // Buttons [ 0 ] [ 1 ]
+      const btnW = 32;
+      const btnH = 26;
+      const btn0X = panel.x + 82;
+      const btn1X = panel.x + 120;
+      const btnY = panel.y + 5;
+
+      // Button [ 0 ]
+      ctx.fillStyle = panel.value === 0 ? "#ef4444" : "#451a03";
+      ctx.fillRect(btn0X, btnY, btnW, btnH);
+      ctx.strokeStyle = panel.value === 0 ? "#fca5a5" : "#78350f";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(btn0X, btnY, btnW, btnH);
+
+      ctx.fillStyle = panel.value === 0 ? "#ffffff" : "#ca8a04";
+      ctx.font = "bold 14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("0", btn0X + btnW / 2, btnY + btnH / 2 + 1);
+
+      // Button [ 1 ]
+      ctx.fillStyle = panel.value === 1 ? "#22c55e" : "#451a03";
+      ctx.fillRect(btn1X, btnY, btnW, btnH);
+      ctx.strokeStyle = panel.value === 1 ? "#86efac" : "#78350f";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(btn1X, btnY, btnW, btnH);
+
+      ctx.fillStyle = panel.value === 1 ? "#ffffff" : "#ca8a04";
+      ctx.fillText("1", btn1X + btnW / 2, btnY + btnH / 2 + 1);
 
       ctx.restore();
     }
@@ -225,87 +329,51 @@ export class Renderer {
   private drawPlatforms(level: Level) {
     const { ctx } = this;
 
-    // Static Platforms & Slopes
     for (const p of level.platforms) {
       ctx.save();
+      ctx.fillStyle = "#d4a359";
+      ctx.fillRect(p.x, p.y, p.width, p.height);
 
-      if (p.slope) {
-        // Render Slope Polygon Ramps
-        ctx.beginPath();
-        if (p.slope === "up-right") {
-          ctx.moveTo(p.x, p.y + p.height);
-          ctx.lineTo(p.x + p.width, p.y);
-          ctx.lineTo(p.x + p.width, p.y + p.height);
-        } else if (p.slope === "up-left") {
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.x + p.width, p.y + p.height);
-          ctx.lineTo(p.x, p.y + p.height);
-        }
-        ctx.closePath();
+      // Sandstone Bevel Highlights
+      ctx.fillStyle = "#e5b86e";
+      ctx.fillRect(p.x, p.y, p.width, 3);
+      ctx.fillStyle = "#a87832";
+      ctx.fillRect(p.x, p.y + p.height - 3, p.width, 3);
 
-        ctx.fillStyle = p.color || "#333d29";
-        ctx.fill();
-
-        ctx.strokeStyle = "#4d5b3e";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Slope Top Moss Highlight
-        ctx.strokeStyle = "#65a30d";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        if (p.slope === "up-right") {
-          ctx.moveTo(p.x, p.y + p.height);
-          ctx.lineTo(p.x + p.width, p.y);
-        } else {
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.x + p.width, p.y + p.height);
-        }
-        ctx.stroke();
-      } else {
-        // Render Rectangular Stone Platform
-        ctx.fillStyle = p.color || "#333d29";
-        ctx.fillRect(p.x, p.y, p.width, p.height);
-
-        // Stone bevel lines
-        ctx.fillStyle = "#1e2617";
-        ctx.fillRect(p.x, p.y + p.height - 4, p.width, 4);
-
-        ctx.strokeStyle = "#4d5b3e";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(p.x, p.y, p.width, p.height);
-
-        // Top Moss Crust
-        ctx.fillStyle = "#65a30d";
-        ctx.fillRect(p.x, p.y, p.width, 4);
-
-        // Grass/Vine tufts on top edge
-        ctx.fillStyle = "#4d7c0f";
-        for (let gx = p.x + 8; gx < p.x + p.width - 8; gx += 18) {
-          ctx.fillRect(gx, p.y - 3, 5, 3);
-        }
-      }
-
+      // Thick Black Outline (Screenshot match!)
+      ctx.strokeStyle = "#1a1008";
+      ctx.lineWidth = 3.5;
+      ctx.strokeRect(p.x, p.y, p.width, p.height);
       ctx.restore();
     }
 
-    // Moving Platforms / Elevators
     for (const mp of level.movingPlatforms) {
       ctx.save();
-      // Elevator base structure
-      ctx.fillStyle = "#4b5563";
+      ctx.fillStyle = mp.active ? "#eab308" : "#8c733e";
       ctx.fillRect(mp.x, mp.y, mp.width, mp.height);
 
-      // Distinctive color bar based on elevator ID
-      const isYellow = mp.id.includes("yellow");
-      ctx.fillStyle = isYellow ? "#eab308" : "#a855f7";
-      ctx.fillRect(mp.x + 4, mp.y + 2, mp.width - 8, 4);
+      ctx.fillStyle = "#ca8a04";
+      ctx.fillRect(mp.x, mp.y, 8, mp.height);
+      ctx.fillRect(mp.x + mp.width - 8, mp.y, 8, mp.height);
 
-      // Gold / Purple border
-      ctx.strokeStyle = isYellow ? "#fde047" : "#c084fc";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#1a1008";
+      ctx.lineWidth = 3;
       ctx.strokeRect(mp.x, mp.y, mp.width, mp.height);
+      ctx.restore();
+    }
+  }
 
+  private drawHazards(hazards: Level["hazards"]) {
+    const { ctx } = this;
+    for (const h of hazards) {
+      ctx.save();
+      if (h.type === "water") {
+        ctx.fillStyle = "rgba(56, 189, 248, 0.85)";
+        ctx.fillRect(h.x, h.y, h.width, h.height);
+      } else if (h.type === "fire") {
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(h.x, h.y, h.width, h.height);
+      }
       ctx.restore();
     }
   }
@@ -314,35 +382,24 @@ export class Renderer {
     const { ctx } = this;
     for (const s of switches) {
       ctx.save();
-
-      // Lever Base Plate
-      ctx.fillStyle = "#eab308";
+      ctx.fillStyle = "#ca8a04";
       ctx.fillRect(s.x, s.y + s.height - 6, s.width, 6);
 
-      // Pivot Handle Angle
       const angle = s.active ? Math.PI / 4 : -Math.PI / 4;
       const cx = s.x + s.width / 2;
       const cy = s.y + s.height - 3;
 
-      ctx.strokeStyle = "#ca8a04";
+      ctx.strokeStyle = "#eab308";
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.sin(angle) * 20, cy - Math.cos(angle) * 20);
+      ctx.lineTo(cx + Math.sin(angle) * 18, cy - Math.cos(angle) * 18);
       ctx.stroke();
 
-      // Lever Knob Head
-      ctx.fillStyle = "#ef4444";
+      ctx.fillStyle = s.active ? "#22c55e" : "#ef4444";
       ctx.beginPath();
-      ctx.arc(
-        cx + Math.sin(angle) * 20,
-        cy - Math.cos(angle) * 20,
-        5,
-        0,
-        Math.PI * 2
-      );
+      ctx.arc(cx + Math.sin(angle) * 18, cy - Math.cos(angle) * 18, 5, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.restore();
     }
   }
@@ -354,18 +411,12 @@ export class Renderer {
       const height = plate.pressed ? 4 : 8;
       const y = plate.pressed ? plate.y + 4 : plate.y;
 
-      const isPurple = plate.id.includes("2");
-      ctx.fillStyle = plate.pressed
-        ? "#22c55e"
-        : isPurple
-        ? "#a855f7"
-        : "#eab308";
+      ctx.fillStyle = plate.pressed ? "#22c55e" : "#ca8a04";
       ctx.fillRect(plate.x, y, plate.width, height);
 
-      ctx.strokeStyle = "#1f2937";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#1a1008";
+      ctx.lineWidth = 1.5;
       ctx.strokeRect(plate.x, y, plate.width, height);
-
       ctx.restore();
     }
   }
@@ -374,171 +425,59 @@ export class Renderer {
     const { ctx } = this;
     for (const door of doors) {
       ctx.save();
-
-      // Sliding Barrier Gate
-      ctx.fillStyle = "#64748b";
+      ctx.fillStyle = door.open ? "#281a0e" : "#eab308";
       ctx.fillRect(door.x, door.y, door.width, door.height);
 
-      ctx.strokeStyle = "#334155";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(door.x, door.y, door.width, door.height);
-
-      // Gate lines / grill
-      ctx.strokeStyle = "#94a3b8";
-      ctx.lineWidth = 2;
-      for (let gy = door.y + 10; gy < door.y + door.height - 10; gy += 15) {
-        ctx.beginPath();
-        ctx.moveTo(door.x + 2, gy);
-        ctx.lineTo(door.x + door.width - 2, gy);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    }
-  }
-
-  private drawPushableBlocks(blocks: Level["pushableBlocks"]) {
-    const { ctx } = this;
-    for (const b of blocks) {
-      ctx.save();
-
-      // Silver metal box body
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(b.x, b.y, b.width, b.height);
-
-      // Gold corner plates (Matching Image 3 metal block!)
-      ctx.fillStyle = "#eab308";
-      const cornerSize = 10;
-      ctx.fillRect(b.x, b.y, cornerSize, cornerSize);
-      ctx.fillRect(b.x + b.width - cornerSize, b.y, cornerSize, cornerSize);
-      ctx.fillRect(b.x, b.y + b.height - cornerSize, cornerSize, cornerSize);
-      ctx.fillRect(
-        b.x + b.width - cornerSize,
-        b.y + b.height - cornerSize,
-        cornerSize,
-        cornerSize
-      );
-
-      // Crossbar rivets frame
-      ctx.strokeStyle = "#475569";
+      ctx.strokeStyle = "#1a1008";
       ctx.lineWidth = 3;
-      ctx.strokeRect(b.x, b.y, b.width, b.height);
-
-      ctx.beginPath();
-      ctx.moveTo(b.x, b.y);
-      ctx.lineTo(b.x + b.width, b.y + b.height);
-      ctx.moveTo(b.x + b.width, b.y);
-      ctx.lineTo(b.x, b.y + b.height);
-      ctx.stroke();
-
+      ctx.strokeRect(door.x, door.y, door.width, door.height);
       ctx.restore();
     }
   }
 
   private drawExits(exits: Level["exits"]) {
     const { ctx } = this;
-
     const drawDoor = (
       exit: Level["exits"]["fire"],
       primaryColor: string,
-      glowColor: string,
-      symbol: string
+      label: string
     ) => {
       ctx.save();
-
-      // Stone doorframe border
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(exit.x - 4, exit.y - 6, exit.width + 8, exit.height + 6);
-
-      // Archway interior
-      ctx.fillStyle = "#0f172a";
+      ctx.fillStyle = "#1e140a";
       ctx.fillRect(exit.x, exit.y, exit.width, exit.height);
 
-      // Glowing interior arch when player inside
-      const glow = ctx.createRadialGradient(
-        exit.x + exit.width / 2,
-        exit.y + exit.height / 2,
-        4,
-        exit.x + exit.width / 2,
-        exit.y + exit.height / 2,
-        35
-      );
-      glow.addColorStop(
-        0,
-        exit.occupied ? glowColor : "rgba(255, 255, 255, 0.1)"
-      );
-      glow.addColorStop(1, "rgba(0, 0, 0, 0.8)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(exit.x + 4, exit.y + 4, exit.width - 8, exit.height - 8);
-
       ctx.strokeStyle = primaryColor;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3.5;
       ctx.strokeRect(exit.x, exit.y, exit.width, exit.height);
 
-      // Symbol Emblem (♂ for Fireboy, ♀ for Watergirl as in original game!)
       ctx.fillStyle = primaryColor;
-      ctx.font = "bold 24px sans-serif";
+      ctx.font = "bold 20px sans-serif";
       ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(
-        symbol,
-        exit.x + exit.width / 2,
-        exit.y + exit.height / 2 - 4
-      );
-
+      ctx.fillText(label, exit.x + exit.width / 2, exit.y + exit.height / 2 + 6);
       ctx.restore();
     };
 
-    drawDoor(exits.fire, "#ef4444", "#fde047", "♂");
-    drawDoor(exits.water, "#38bdf8", "#e0f2fe", "♀");
+    drawDoor(exits.fire, "#ef4444", "♂");
+    drawDoor(exits.water, "#38bdf8", "♀");
   }
 
   private drawGems(gems: Level["gems"]) {
     const { ctx } = this;
-
     for (const gem of gems) {
       if (gem.collected) continue;
-
       const cx = gem.x + gem.width / 2;
-      const cy =
-        gem.y + gem.height / 2 + Math.sin(this.time * 4 + gem.x) * 4; // Floating animation
+      const cy = gem.y + gem.height / 2 + Math.sin(this.time * 4 + gem.x) * 3;
 
       ctx.save();
       ctx.translate(cx, cy);
-
-      const isFire = gem.type === "fire_gem";
-      const mainColor = isFire ? "#ef4444" : "#38bdf8";
-      const highlightColor = isFire ? "#fde047" : "#e0f2fe";
-
-      // Shiny Aura
-      const aura = ctx.createRadialGradient(0, 0, 2, 0, 0, 16);
-      aura.addColorStop(0, mainColor);
-      aura.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = aura;
+      ctx.fillStyle = gem.type === "fire_gem" ? "#ef4444" : "#38bdf8";
       ctx.beginPath();
-      ctx.arc(0, 0, 16, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 3D Faceted Diamond Shape
-      ctx.fillStyle = mainColor;
-      ctx.beginPath();
-      ctx.moveTo(0, -11);
-      ctx.lineTo(9, 0);
-      ctx.lineTo(0, 11);
-      ctx.lineTo(-9, 0);
+      ctx.moveTo(0, -10);
+      ctx.lineTo(8, 0);
+      ctx.lineTo(0, 10);
+      ctx.lineTo(-8, 0);
       ctx.closePath();
       ctx.fill();
-
-      // Facet Highlight
-      ctx.fillStyle = highlightColor;
-      ctx.beginPath();
-      ctx.moveTo(0, -11);
-      ctx.lineTo(4, 0);
-      ctx.lineTo(0, 4);
-      ctx.lineTo(-4, 0);
-      ctx.closePath();
-      ctx.fill();
-
       ctx.restore();
     }
   }
@@ -559,98 +498,67 @@ export class Renderer {
 
   private drawCharacter(char: Character) {
     const { ctx } = this;
-
-    if (!char.isAlive) {
-      // Death pop animation
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, char.deathTimer / 0.8);
-      ctx.fillStyle = char.type === "fire" ? "#ef4444" : "#38bdf8";
-      ctx.beginPath();
-      ctx.arc(
-        char.x + char.width / 2,
-        char.y + char.height / 2,
-        28 * (1 - char.deathTimer / 0.8),
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-      ctx.restore();
-      return;
-    }
+    if (!char.isAlive) return;
 
     const cx = char.x + char.width / 2;
     const cy = char.y + char.height / 2;
 
     ctx.save();
+    const isRed = char.type === "fire";
+    const primaryColor = isRed ? "#ef4444" : "#38bdf8";
 
-    const isFire = char.type === "fire";
-    const primaryColor = isFire ? "#ef4444" : "#38bdf8";
-    const secondaryColor = isFire ? "#facc15" : "#93c5fd";
-
-    // Dynamic bobbing for character movement
-    const bounce = Math.sin(this.time * 12) * (Math.abs(char.vx) > 10 ? 3 : 1);
-
-    // 1. Character Silhouette Body (rounded teardrop / flame body)
-    ctx.fillStyle = primaryColor;
+    // Glow aura around character
+    const aura = ctx.createRadialGradient(cx, cy, 3, cx, cy, 20);
+    aura.addColorStop(0, primaryColor);
+    aura.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = aura;
     ctx.beginPath();
-    ctx.ellipse(
-      cx,
-      cy + 2,
-      char.width / 2,
-      char.height / 2 - 2,
-      0,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(cx, cy, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Character Head Feature
-    if (isFire) {
-      // Fireboy Flame Head Spikes (Matching Image 5 cute flame head!)
-      ctx.fillStyle = secondaryColor;
-      ctx.beginPath();
-      ctx.moveTo(cx - 10, char.y + 8);
-      ctx.quadraticCurveTo(
-        cx - 14,
-        char.y - 14 + bounce,
-        cx - 4,
-        char.y - 2 + bounce
-      );
-      ctx.quadraticCurveTo(
-        cx,
-        char.y - 20 + bounce,
-        cx + 4,
-        char.y - 2 + bounce
-      );
-      ctx.quadraticCurveTo(
-        cx + 14,
-        char.y - 14 + bounce,
-        cx + 10,
-        char.y + 8
-      );
-      ctx.fill();
-    } else {
-      // Watergirl Teardrop Ponytail Head (Matching Image 5 cute water droplet head!)
-      ctx.fillStyle = secondaryColor;
-      ctx.beginPath();
-      ctx.arc(cx, char.y + 2 + bounce, 10, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Body Silhouette
+    ctx.fillStyle = primaryColor;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 2, char.width / 2, char.height / 2 - 2, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // 3. Expressive Eyes
+    // Eyes
     const eyeOffset = char.facing === "right" ? 3 : -3;
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.arc(cx + eyeOffset - 4, char.y + 16, 4, 0, Math.PI * 2);
-    ctx.arc(cx + eyeOffset + 4, char.y + 16, 4, 0, Math.PI * 2);
+    ctx.arc(cx + eyeOffset - 4, char.y + 16, 3.5, 0, Math.PI * 2);
+    ctx.arc(cx + eyeOffset + 4, char.y + 16, 3.5, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#0f172a";
+    ctx.fillStyle = "#000000";
     ctx.beginPath();
-    ctx.arc(cx + eyeOffset - 3, char.y + 16, 2, 0, Math.PI * 2);
-    ctx.arc(cx + eyeOffset + 5, char.y + 16, 2, 0, Math.PI * 2);
+    ctx.arc(cx + eyeOffset - 3, char.y + 16, 1.8, 0, Math.PI * 2);
+    ctx.arc(cx + eyeOffset + 5, char.y + 16, 1.8, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.restore();
+  }
+
+  private drawRouteUnlockedBanner(
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement
+  ) {
+    ctx.save();
+    ctx.fillStyle = "rgba(22, 101, 52, 0.9)";
+    ctx.fillRect(canvas.width / 2 - 200, 16, 400, 44);
+
+    ctx.strokeStyle = "#4ade80";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(canvas.width / 2 - 200, 16, 400, 44);
+
+    ctx.fillStyle = "#fef08a";
+    ctx.font = "bold 18px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      "FINAL ROUTE UNLOCKED! REACH EXITS! 🎉",
+      canvas.width / 2,
+      43
+    );
     ctx.restore();
   }
 }

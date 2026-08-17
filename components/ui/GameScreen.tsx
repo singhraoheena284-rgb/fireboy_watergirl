@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createGame } from "@/game/engine/createGame";
-import type { GameStats } from "@/game/types/game";
+import type { GameStats, Level } from "@/game/types/game";
+import { getLevel } from "@/game/levels";
 
 export default function GameScreen() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -12,6 +13,7 @@ export default function GameScreen() {
   const router = useRouter();
 
   const levelNum = parseInt(searchParams.get("level") || "1", 10);
+  const [levelData, setLevelData] = useState<Level | null>(null);
   const [stats, setStats] = useState<GameStats>({
     fireGemsCollected: 0,
     fireGemsTotal: 0,
@@ -31,6 +33,9 @@ export default function GameScreen() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    const lvl = getLevel(levelNum);
+    setLevelData(lvl);
 
     const game = createGame(canvasRef.current, levelNum, (newStats: GameStats) => {
       setStats({ ...newStats });
@@ -57,31 +62,85 @@ export default function GameScreen() {
     window.dispatchEvent(event);
   };
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
+  const togglePause = () => {
+    const event = new KeyboardEvent("keydown", { code: "KeyP" });
+    window.dispatchEvent(event);
+  };
+
+  // Canvas Click Handler for Ancient Sandstone Input Panels [ 0 ] [ 1 ]
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || !levelData || !levelData.inputPanels) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = 1280 / rect.width;
+    const scaleY = 720 / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    for (const panel of levelData.inputPanels) {
+      const btn0X = panel.x + 80;
+      const btn1X = panel.x + 118;
+      const btnY = panel.y + 5;
+      const btnW = 32;
+      const btnH = 26;
+
+      // Clicked [ 0 ]
+      if (
+        clickX >= btn0X &&
+        clickX <= btn0X + btnW &&
+        clickY >= btnY &&
+        clickY <= btnY + btnH
+      ) {
+        panel.value = 0;
+        break;
+      }
+
+      // Clicked [ 1 ]
+      if (
+        clickX >= btn1X &&
+        clickX <= btn1X + btnW &&
+        clickY >= btnY &&
+        clickY <= btnY + btnH
+      ) {
+        panel.value = 1;
+        break;
+      }
+    }
+  };
+
+  // 5-Minute Countdown Timer (05:00 -> 00:00)
+  const formatCountdown = (elapsed: number) => {
+    const rem = Math.max(0, 300 - Math.floor(elapsed));
+    const m = Math.floor(rem / 60);
+    const s = rem % 60;
     return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const nextLevelAvailable = levelNum < 3;
+  const formatTimeRemaining = (elapsed: number) => {
+    const rem = Math.max(0, 300 - Math.floor(elapsed));
+    const m = Math.floor(rem / 60);
+    const s = rem % 60;
+    return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+  };
 
   return (
     <main className="game-page">
       <div className="game-shell">
-        {/* Top In-Game HUD matching Image 3 */}
+        {/* Minimal Sandstone Top HUD Bar matching Screenshot! */}
         <div className="game-hud-bar">
           <div className="hud-group">
-            <span className="gem-counter fire">
-              💎 FIRE GEMS: {stats.fireGemsCollected} / {stats.fireGemsTotal}
-            </span>
-            <span className="gem-counter water">
-              💎 WATER GEMS: {stats.waterGemsCollected} / {stats.waterGemsTotal}
-            </span>
+            <button
+              className="parchment-button hud-btn"
+              onClick={togglePause}
+              title="Pause (P/ESC)"
+            >
+              ◀ BACK
+            </button>
           </div>
 
-          {/* Oval Leaf-Framed Timer (Image 3!) */}
+          {/* Wooden Timer Box Centered at Top (Screenshot Match!) */}
           <div className="hud-timer-oval">
-            <span>{formatTime(stats.elapsedSeconds)}</span>
+            <span>{formatCountdown(stats.elapsedSeconds)}</span>
           </div>
 
           <div className="hud-actions">
@@ -90,18 +149,15 @@ export default function GameScreen() {
               onClick={toggleSound}
               title="Toggle Audio (M)"
             >
-              {isMuted ? "🔇 Muted" : "🔊 Sound"}
+              {isMuted ? "🔇" : "🔊"}
             </button>
             <button
               className="parchment-button hud-btn"
               onClick={handleRestart}
               title="Restart Level (R)"
             >
-              🔄 Restart
+              🔄
             </button>
-            <Link className="secondary-button hud-btn" href="/levels">
-              📋 Map
-            </Link>
           </div>
         </div>
 
@@ -112,14 +168,18 @@ export default function GameScreen() {
             className="game-canvas"
             width={1280}
             height={720}
-            aria-label="Fireboy and Watergirl Canvas Viewport"
+            onClick={handleCanvasClick}
+            aria-label="Binary Bridge Sandstone Game Canvas"
           />
 
           {/* Victory Overlay Modal */}
           {stats.status === "victory" && (
             <div className="parchment-modal-overlay">
               <div className="parchment-card">
-                <h2>VICTORY! LEVEL COMPLETE 🎉</h2>
+                <h2>LEVEL COMPLETE 🎉</h2>
+                <h3 style={{ color: "#16a34a", margin: "0 0 16px 0" }}>
+                  LOGIC TEMPLE CLEARED
+                </h3>
                 <div
                   style={{
                     background: "rgba(0,0,0,0.15)",
@@ -129,51 +189,40 @@ export default function GameScreen() {
                     textAlign: "left"
                   }}
                 >
-                  <p>⏱️ Time Taken: <strong>{formatTime(stats.elapsedSeconds)}</strong></p>
-                  <p>🔥 Fire Diamonds: <strong>{stats.fireGemsCollected} / {stats.fireGemsTotal}</strong></p>
-                  <p>💧 Water Diamonds: <strong>{stats.waterGemsCollected} / {stats.waterGemsTotal}</strong></p>
+                  <p>⏱️ TIME REMAINING: <strong>{formatTimeRemaining(stats.elapsedSeconds)}</strong></p>
+                  <p>⚡ LOGIC SCORE: <strong>100% (ALL GATES SOLVED)</strong></p>
+                  <p>💎 COLLECTIBLES: <strong>{stats.fireGemsCollected + stats.waterGemsCollected} / {stats.fireGemsTotal + stats.waterGemsTotal}</strong></p>
                 </div>
-                <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-                  {nextLevelAvailable ? (
-                    <button
-                      className="parchment-button"
-                      onClick={() => router.push(`/game?level=${levelNum + 1}`)}
-                    >
-                      NEXT LEVEL ➡️
-                    </button>
-                  ) : (
-                    <Link className="parchment-button" href="/levels">
-                      TEMPLE CLEARED! 🎉
-                    </Link>
-                  )}
-                  <button className="secondary-button" onClick={handleRestart}>
-                    REPLAY LEVEL
+                <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+                  <button className="parchment-button" onClick={handleRestart}>
+                    REPLAY
                   </button>
-                  <Link className="secondary-button" href="/levels">
-                    MAP SELECT
+                  <Link className="secondary-button" href="/">
+                    MAIN MENU
                   </Link>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Defeat Overlay Modal */}
+          {/* Defeat / Time Up Overlay Modal */}
           {stats.status === "defeated" && (
             <div className="parchment-modal-overlay">
               <div className="parchment-card" style={{ borderColor: "#7f1d1d" }}>
-                <h2 style={{ color: "#991b1b" }}>ELEMENTAL FAILURE 💥</h2>
-                <p style={{ margin: "0 0 24px 0", fontSize: "16px", lineHeight: "1.5" }}>
-                  A character touched an incompatible hazard pool!
-                  <br />
-                  Remember: <strong>Fireboy dies in Water &amp; Acid</strong>,{" "}
-                  <strong>Watergirl dies in Fire &amp; Acid</strong>.
+                <h2 style={{ color: "#991b1b" }}>
+                  {stats.defeatReason === "TIME UP" ? "TIME UP ⏱️" : "LOGIC FAILURE 💥"}
+                </h2>
+                <p style={{ margin: "0 0 24px 0", fontSize: "16px" }}>
+                  {stats.defeatReason === "TIME UP"
+                    ? "You ran out of time! Re-examine the logic gates and try again."
+                    : stats.defeatReason || "A character touched a hazard pool!"}
                 </p>
                 <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                   <button className="parchment-button" onClick={handleRestart}>
-                    TRY AGAIN (R)
+                    RETRY (R)
                   </button>
-                  <Link className="secondary-button" href="/levels">
-                    MAP SELECT
+                  <Link className="secondary-button" href="/">
+                    MAIN MENU
                   </Link>
                 </div>
               </div>
@@ -186,20 +235,14 @@ export default function GameScreen() {
               <div className="parchment-card">
                 <h2>GAME PAUSED ⏸️</h2>
                 <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-                  <button
-                    className="parchment-button"
-                    onClick={() => {
-                      const event = new KeyboardEvent("keydown", { code: "KeyP" });
-                      window.dispatchEvent(event);
-                    }}
-                  >
+                  <button className="parchment-button" onClick={togglePause}>
                     RESUME
                   </button>
                   <button className="secondary-button" onClick={handleRestart}>
                     RESTART (R)
                   </button>
-                  <Link className="secondary-button" href="/levels">
-                    MAP SELECT
+                  <Link className="secondary-button" href="/">
+                    MAIN MENU
                   </Link>
                 </div>
               </div>
@@ -207,16 +250,16 @@ export default function GameScreen() {
           )}
         </div>
 
-        {/* Footer Controls Tag Bar */}
+        {/* Subtle Bottom Controls Tag Bar */}
         <div className="game-controls-bar">
           <div className="control-tag fire-tag">
-            <strong>🔥 Fireboy:</strong> W (Jump), A (Left), D (Right)
+            <strong>🔴 RED:</strong> WASD (W=Jump, A=Left, D=Right)
           </div>
           <div className="control-tag water-tag">
-            <strong>💧 Watergirl:</strong> ↑ (Jump), ← (Left), → (Right)
+            <strong>🔵 BLUE:</strong> ARROW KEYS (↑=Jump, ←=Left, →=Right)
           </div>
           <div className="control-tag">
-            <strong>Keys:</strong> R (Restart) | P (Pause) | M (Mute Sound)
+            <strong>PANELS:</strong> Click [ 0 ] or [ 1 ] on temple input panels!
           </div>
         </div>
       </div>

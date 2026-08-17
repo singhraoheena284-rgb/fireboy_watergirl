@@ -24,6 +24,7 @@ export class LevelSystem {
     this.stats.elapsedSeconds = 0;
     this.stats.status = "playing";
     delete this.stats.defeatReason;
+    this.stats.isEscaping = false;
   }
 
   update(
@@ -38,6 +39,13 @@ export class LevelSystem {
     if (this.stats.status !== "playing") return;
 
     this.stats.elapsedSeconds += dt;
+
+    // 0. Check 5-Minute Time Limit (300 Seconds)
+    if (this.stats.elapsedSeconds >= 300) {
+      this.stats.status = "defeated";
+      this.stats.defeatReason = "TIME UP";
+      return;
+    }
 
     // 1. Gem Pickups
     for (const gem of level.gems) {
@@ -85,7 +93,7 @@ export class LevelSystem {
     waterExit.occupied =
       waterChar.isAlive && this.checkExitOverlap(waterChar, waterExit);
 
-    // Dual Exit Victory Check
+    // Dual Exit Victory Check (Both characters reach exits!)
     if (
       fireExit.occupied &&
       waterExit.occupied &&
@@ -96,7 +104,7 @@ export class LevelSystem {
       if (onVictory) onVictory();
     }
 
-    // Check Defeat (if either character's death animation finishes)
+    // Check Defeat (if either character dies)
     if (
       (!fireChar.isAlive && fireChar.deathTimer <= 0) ||
       (!waterChar.isAlive && waterChar.deathTimer <= 0)
@@ -118,8 +126,8 @@ export class LevelSystem {
     const charCenterX = char.x + char.width / 2;
     const exitCenterX = exit.x + exit.width / 2;
     return (
-      Math.abs(charCenterX - exitCenterX) < 18 &&
-      char.y + char.height >= exit.y + exit.height - 10 &&
+      Math.abs(charCenterX - exitCenterX) < 22 &&
+      char.y + char.height >= exit.y + exit.height - 12 &&
       char.y <= exit.y + exit.height
     );
   }

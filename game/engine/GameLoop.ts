@@ -5,6 +5,7 @@ import type { InputManager } from "../input/InputManager";
 import { CollisionSystem } from "../systems/CollisionSystem";
 import { HazardSystem } from "../systems/HazardSystem";
 import { LevelSystem } from "../systems/LevelSystem";
+import { LogicSystem } from "../systems/LogicSystem";
 import { ParticleSystem } from "../systems/ParticleSystem";
 import { PhysicsSystem } from "../systems/PhysicsSystem";
 import { PuzzleSystem } from "../systems/PuzzleSystem";
@@ -33,6 +34,7 @@ export class GameLoop {
   private physicsSystem = new PhysicsSystem();
   private collisionSystem = new CollisionSystem();
   private puzzleSystem = new PuzzleSystem();
+  private logicSystem = new LogicSystem();
   private hazardSystem = new HazardSystem();
   private particleSystem = new ParticleSystem();
   private levelSystem = new LevelSystem();
@@ -62,6 +64,7 @@ export class GameLoop {
 
     // Initialize level system counters
     this.levelSystem.initLevel(this.options.level);
+    this.logicSystem.reset();
   }
 
   public restartLevel() {
@@ -78,7 +81,11 @@ export class GameLoop {
       plate.pressed = false;
     }
 
-    // Reset pushable blocks
+    // Reset switches
+    for (const s of this.options.level.switches) {
+      s.active = false;
+    }
+
     this.initLevelEntities();
   }
 
@@ -136,6 +143,13 @@ export class GameLoop {
         this.fireChar,
         this.waterChar,
         this.doors
+      );
+      this.logicSystem.update(
+        delta,
+        level,
+        this.doors,
+        this.levelSystem.stats,
+        () => this.soundSystem.playVictory()
       );
       this.hazardSystem.update(
         delta,

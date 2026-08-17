@@ -8,44 +8,44 @@ export default function InstructionsModal({ onClose }: InstructionsModalProps) {
   return (
     <div className="parchment-modal-overlay">
       <div className="parchment-card">
-        <h2>INSTRUCTIONS</h2>
+        <h2>LOGIC TEMPLE INSTRUCTIONS</h2>
         <ul className="parchment-rules">
           <li>
             <span className="bullet">•</span>
             <span>
-              USE <strong className="text-fire">W, A, D</strong> TO MOVE{" "}
-              <strong className="text-fire">FIREBOY</strong> (W = Jump, A = Left,
-              D = Right).
+              <strong className="text-fire">RED CHARACTER (WASD)</strong>: W = Jump, A = Left, D = Right.
             </span>
           </li>
           <li>
             <span className="bullet">•</span>
             <span>
-              USE THE <strong className="text-water">ARROW KEYS</strong> TO MOVE{" "}
-              <strong className="text-water">WATERGIRL</strong> (↑ = Jump, ← = Left,
-              → = Right).
+              <strong className="text-water">BLUE CHARACTER (ARROWS)</strong>: ↑ = Jump, ← = Left, → = Right.
             </span>
           </li>
           <li>
             <span className="bullet">•</span>
             <span>
-              IN DIAMOND LEVELS GET TO THE EXIT DOORS AS FAST AS POSSIBLE, GRABBING
-              ALL DIAMONDS.
+              <strong>BINARY SIGNALS</strong>: Switches set input to 1 (ON). Glowing green wires carry 1 signals; dim red wires carry 0 signals.
             </span>
           </li>
           <li>
             <span className="bullet">•</span>
             <span>
-              THE TRICK IS TO MOVE BOTH CHARACTERS SIMULTANEOUSLY AND WORK
-              TOGETHER TO SOLVE PUZZLES.
+              <strong>LOGIC GATES</strong>:
+              <br />
+              - <strong>AND</strong>: Requires BOTH inputs ON.
+              <br />
+              - <strong>OR</strong>: Requires EITHER input ON.
+              <br />
+              - <strong>NOT</strong>: Inverts input (OFF = 1 opens door!).
+              <br />
+              - <strong>XOR</strong>: Requires EXACTLY ONE input ON.
             </span>
           </li>
           <li>
             <span className="bullet">•</span>
             <span>
-              <strong className="text-fire">FIREBOY</strong> DIES IN WATER &amp;
-              ACID. <strong className="text-water">WATERGIRL</strong> DIES IN FIRE
-              &amp; ACID.
+              <strong>TIMED ESCAPE</strong>: Solving the final combination gate triggers a 10-second escape sequence. Both RED &amp; BLUE must reach their exits!
             </span>
           </li>
         </ul>
